@@ -210,15 +210,15 @@ function generateReciprocalStructure() {
     slider.addEventListener('input', generateReciprocalStructure);
 });
 
-// Lógica interactiva del botón de rotación pasiva
+// --- LOGIC FOR PASSIVE ROTATION BUTTON ---
 btnRotation.addEventListener('click', () => {
     isRotating = !isRotating;
     if (isRotating) {
-        btnRotation.innerText = "PAUSAR ROTACIÓN";
+        btnRotation.innerText = "PAUSE ROTATION";
         btnRotation.style.borderColor = "#ff5500";
         btnRotation.style.color = "#ff5500";
     } else {
-        btnRotation.innerText = "REANUDAR ROTACIÓN";
+        btnRotation.innerText = "RESUME ROTATION";
         btnRotation.style.borderColor = "#00f3ff";
         btnRotation.style.color = "#00f3ff";
     }
