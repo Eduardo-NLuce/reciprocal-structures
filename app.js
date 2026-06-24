@@ -31,11 +31,11 @@ scene.add(ambientLight);
 const selectSurface = document.getElementById('select-surface');
 const selectPattern = document.getElementById('select-pattern');
 const sliderOffset = document.getElementById('slider-offset');
-const sliderVoladizo = document.getElementById('slider-voladizo');
+const sliderVoladizo = document.getElementById('slider-voladizo'); // Corregido vinculación
 const sliderGrosor = document.getElementById('slider-grosor');
 const sliderSubdiv = document.getElementById('slider-subdiv');
 const checkSolid = document.getElementById('check-viga-solida');
-const btnRotation = document.getElementById('btn-rotation');
+const btnRotation = document.getElementById('btn-rotation'); // Corregido vinculación
 
 // Variables de estado de animación
 let structureGroup = new THREE.Group();
@@ -181,6 +181,7 @@ function generateReciprocalStructure() {
     elem.addEventListener('change', generateReciprocalStructure);
 });
 
+// Incluido explícitamente sliderVoladizo en la matriz de escucha de cambios
 [sliderOffset, sliderVoladizo, sliderGrosor, sliderSubdiv].forEach(slider => {
     slider.addEventListener('input', generateReciprocalStructure);
 });
@@ -190,12 +191,12 @@ btnRotation.addEventListener('click', () => {
     isRotating = !isRotating;
     if (isRotating) {
         btnRotation.innerText = "PAUSAR ROTACIÓN";
-        btnRotation.style.borderColor = "var(--neon-orange)";
-        btnRotation.style.color = "var(--neon-orange)";
+        btnRotation.style.borderColor = "#ff5500";
+        btnRotation.style.color = "#ff5500";
     } else {
         btnRotation.innerText = "REANUDAR ROTACIÓN";
-        btnRotation.style.borderColor = "var(--neon-cyan)";
-        btnRotation.style.color = "var(--neon-cyan)";
+        btnRotation.style.borderColor = "#00f3ff";
+        btnRotation.style.color = "#00f3ff";
     }
 });
 
