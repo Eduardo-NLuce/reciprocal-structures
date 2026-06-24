@@ -24,7 +24,7 @@
             <label class="hud-label">SUPERFICIE TOPOLÓGICA</label>
             <select id="select-surface" class="hud-select">
                 <option value="paraboloid">PARABOLOIDE</option>
-                <option value="hypar">PARABOLOIDE HIPERBÓLICO</option>
+                <option value="hypar" selected>PARABOLOIDE HIPERBÓLICO</option>
                 <option value="catenoid">CATENAROIDE</option>
                 <option value="sphere">SEMI-ESFERA</option>
                 <option value="ellipsoid">SEMI-ELIPSOIDE</option>
@@ -35,8 +35,8 @@
             <label class="hud-label">PATRÓN DE MALLA (REDISEÑO)</label>
             <select id="select-pattern" class="hud-select">
                 <option value="3">TRIANGULAR (3-GON)</option>
-                <option value="4" selected>CUADRADA (4-GON)</option>
-                <option value="5">PENTAGONAL (5-GON)</option>
+                <option value="4">CUADRADA (4-GON)</option>
+                <option value="5" selected>PENTAGONAL (5-GON)</option>
                 <option value="6">HEXAGONAL (6-GON)</option>
                 <option value="8">OCTAGONAL (8-GON)</option>
             </select>
@@ -45,8 +45,8 @@
         <hr class="hud-divider">
 
         <div class="control-group">
-            <label class="hud-label">ENGANCHE / OFFSET RECÍPROCO (<span id="val-offset">0.25</span>)</label>
-            <input type="range" id="slider-offset" min="0.0" max="0.6" step="0.02" value="0.25">
+            <label class="hud-label">ENGANCHE / OFFSET RECÍPROCO (<span id="val-offset">0.00</span>)</label>
+            <input type="range" id="slider-offset" min="0.0" max="0.6" step="0.02" value="0.0">
         </div>
 
         <div class="control-group">
