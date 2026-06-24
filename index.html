@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,29 +15,29 @@
     <div id="hud-container">
         <div class="hud-header">
             <h2>RECIPROCAL_FRAME // SYS</h2>
-            <p>GENERADOR TECTÓNICO DE ESTRUCTURAS</p>
+            <p>TECTONIC STRUCTURE GENERATOR</p>
         </div>
 
         <hr class="hud-divider">
 
         <div class="control-group">
-            <label class="hud-label">SUPERFICIE TOPOLÓGICA</label>
+            <label class="hud-label">TOPOLOGICAL SURFACE</label>
             <select id="select-surface" class="hud-select">
-                <option value="paraboloid">PARABOLOIDE</option>
-                <option value="hypar" selected>PARABOLOIDE HIPERBÓLICO</option>
-                <option value="catenoid">CATENAROIDE</option>
-                <option value="sphere">SEMI-ESFERA</option>
-                <option value="ellipsoid">SEMI-ELIPSOIDE</option>
+                <option value="paraboloid">PARABOLOID</option>
+                <option value="hypar" selected>HYPERBOLIC PARABOLOID</option>
+                <option value="catenoid">CATENOID</option>
+                <option value="sphere">SEMI-SPHERE</option>
+                <option value="ellipsoid">SEMI-ELLIPSOID</option>
             </select>
         </div>
 
         <div class="control-group">
-            <label class="hud-label">PATRÓN DE MALLA (REDISEÑO)</label>
+            <label class="hud-label">MESH PATTERN (RE-DESIGN)</label>
             <select id="select-pattern" class="hud-select">
                 <option value="3">TRIANGULAR (3-GON)</option>
-                <option value="4">CUADRADA (4-GON)</option>
-                <option value="5">PENTAGONAL (5-GON)</option>
-                <option value="6" selected>HEXAGONAL (6-GON)</option>
+                <option value="4">SQUARE (4-GON)</option>
+                <option value="5" selected>PENTAGONAL (5-GON)</option>
+                <option value="6">HEXAGONAL (6-GON)</option>
                 <option value="8">OCTAGONAL (8-GON)</option>
             </select>
         </div>
@@ -45,34 +45,34 @@
         <hr class="hud-divider">
 
         <div class="control-group">
-            <label class="hud-label">ENGANCHE / OFFSET RECÍPROCO (<span id="val-offset">0.00</span>)</label>
+            <label class="hud-label">RECIPROCAL OFFSET / ENGAGEMENT (<span id="val-offset">0.00</span>)</label>
             <input type="range" id="slider-offset" min="0.0" max="0.6" step="0.02" value="0.0">
         </div>
 
         <div class="control-group">
-            <label class="hud-label">VOLADIZO / LONGITUD EXTRA (<span id="val-voladizo">1.5</span>x)</label>
+            <label class="hud-label">OVERHANG / EXTRA LENGTH (<span id="val-voladizo">1.5</span>x)</label>
             <input type="range" id="slider-voladizo" min="0.0" max="5.0" step="0.1" value="1.5">
         </div>
 
         <div class="control-group">
-            <label class="hud-label">SECCIÓN DE LA BARRA (<span id="val-grosor">0.04</span> m)</label>
+            <label class="hud-label">BAR CROSS-SECTION (<span id="val-grosor">0.04</span> m)</label>
             <input type="range" id="slider-grosor" min="0.01" max="0.12" step="0.01" value="0.04">
         </div>
 
         <div class="control-group">
-            <label class="hud-label">SUBDIVISIONES (<span id="val-subdiv">8</span>)</label>
+            <label class="hud-label">SUBDIVISIONS (<span id="val-subdiv">8</span>)</label>
             <input type="range" id="slider-subdiv" min="4" max="16" step="1" value="8">
         </div>
 
         <div class="control-group checkbox-group">
             <label class="hud-label">
-                <input type="checkbox" id="check-viga-solida" checked> VER COMPONENTES SÓLIDOS
+                <input type="checkbox" id="check-viga-solida" checked> RENDER SOLID COMPONENTS
             </label>
         </div>
 
         <hr class="hud-divider">
         
-        <button id="btn-rotation" class="hud-button">PAUSAR ROTACIÓN</button>
+        <button id="btn-rotation" class="hud-button">PAUSE ROTATION</button>
     </div>
 
     <script src="app.js"></script>
