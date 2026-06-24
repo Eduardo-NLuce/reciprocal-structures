@@ -4,7 +4,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x050201);
 
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 5, 8);
+camera.position.set(0, 6, 9);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -15,19 +15,19 @@ const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
 
-// Iluminación dual (Estilo laboratorio cibernético)
-const light1 = new THREE.DirectionalLight(0xff5500, 1.2);
-light1.position.set(5, 10, 5);
+// Luces para enfatizar el volumen de los listones
+const light1 = new THREE.DirectionalLight(0xff5500, 1.3);
+light1.position.set(5, 12, 6);
 scene.add(light1);
 
-const light2 = new THREE.DirectionalLight(0x00f3ff, 0.8);
-light2.position.set(-5, -5, -5);
+const light2 = new THREE.DirectionalLight(0x00f3ff, 0.9);
+light2.position.set(-5, -3, -5);
 scene.add(light2);
 
-const ambientLight = new THREE.AmbientLight(0x0a0f1d, 1.5);
+const ambientLight = new THREE.AmbientLight(0x0b0f19, 1.8);
 scene.add(ambientLight);
 
-// Referencia de UI
+// UI Elements
 const selectSurface = document.getElementById('select-surface');
 const selectPattern = document.getElementById('select-pattern');
 const sliderOffset = document.getElementById('slider-offset');
@@ -35,60 +35,52 @@ const sliderGrosor = document.getElementById('slider-grosor');
 const sliderSubdiv = document.getElementById('slider-subdiv');
 const checkSolid = document.getElementById('check-viga-solida');
 
-// Contenedor principal de la estructura generada
 let structureGroup = new THREE.Group();
 scene.add(structureGroup);
 
 // --- ECUACIONES DE SUPERFICIES PARAMÉTRICAS ---
 function getSurfacePoint(type, u, v) {
     let x = 0, y = 0, z = 0;
-    // Mapeo de u y v de [0,1] a rangos geométricos
     let uu = u * Math.PI * 2; 
-    let vv = v; 
 
     switch(type) {
-        case 'paraboloid': // Paraboloide: z = x^2 + y^2
+        case 'paraboloid':
             let r_p = v * 2.5;
             x = r_p * Math.cos(uu);
             z = r_p * Math.sin(uu);
-            y = (x*x + z*z) * -0.25 + 2; // Invertido para cúpula
+            y = (x*x + z*z) * -0.22 + 2;
             break;
-
-        case 'hypar': // Paraboloide Hiperbólico (Silla de montar)
+        case 'hypar':
             x = (u * 2 - 1) * 2.5;
             z = (v * 2 - 1) * 2.5;
-            y = (x*x - z*z) * 0.2 + 1;
+            y = (x*x - z*z) * 0.25 + 1;
             break;
-
-        case 'catenoid': // Catenaroide
+        case 'catenoid':
             let h = (v * 2 - 1) * 1.5;
             let c = 0.8;
             let r_c = c * Math.cosh(h / c);
             x = r_c * Math.cos(uu);
             z = r_c * Math.sin(uu);
-            y = h + 1.5;
+            y = h + 1.2;
             break;
-
-        case 'sphere': // Semi-Esfera
-            let theta = v * Math.PI * 0.5; // Solo domo superior
+        case 'sphere':
+            let theta = v * Math.PI * 0.5;
             x = 2.5 * Math.sin(theta) * Math.cos(uu);
             z = 2.5 * Math.sin(theta) * Math.sin(uu);
             y = 2.5 * Math.cos(theta);
             break;
-
-        case 'ellipsoid': // Semi-Elipsoide
+        case 'ellipsoid':
             let t_e = v * Math.PI * 0.5;
             x = 3.0 * Math.sin(t_e) * Math.cos(uu);
-            z = 1.8 * Math.sin(t_e) * Math.sin(uu); // Eje z achatado
+            z = 1.8 * Math.sin(t_e) * Math.sin(uu);
             y = 2.0 * Math.cos(t_e);
             break;
     }
     return new THREE.Vector3(x, y, z);
 }
 
-// --- ALGORITMO GENERADOR RECÍPROCO ---
+// --- GENERADOR DE ESTRUCTURA RECÍPROCA INTER-CONECTADA ---
 function generateReciprocalStructure() {
-    // Limpiar geometría anterior
     while(structureGroup.children.length > 0) {
         structureGroup.remove(structureGroup.children[0]);
     }
@@ -99,104 +91,96 @@ function generateReciprocalStructure() {
     const grosor = parseFloat(sliderGrosor.value);
     const subdiv = parseInt(sliderSubdiv.value);
 
-    // Actualizar labels del HUD
     document.getElementById('val-offset').innerText = offset.toFixed(2);
     document.getElementById('val-grosor').innerText = grosor.toFixed(2);
     document.getElementById('val-subdiv').innerText = subdiv;
 
-    // Definición de materiales de neón
     const solidMaterial = new THREE.MeshPhongMaterial({
         color: 0xff5500,
-        shininess: 80,
+        shininess: 90,
         specular: 0x00f3ff,
         side: THREE.DoubleSide
     });
-
     const wireMaterial = new THREE.LineBasicMaterial({ color: 0x00f3ff });
 
-    // 1. Mapeo espacial de la rejilla para generar las celdas n-gonal estructurales
+    // 1. Matriz para almacenar los nodos puros de la superficie recalculada
+    let grid = [];
+    for (let i = 0; i <= subdiv; i++) {
+        grid[i] = [];
+        for (let j = 0; j <= subdiv; j++) {
+            grid[i][j] = getSurfacePoint(surfaceType, i / subdiv, j / subdiv);
+        }
+    }
+
+    // 2. Generar barras a lo largo de las direcciones de la malla (U y V)
+    // Al desfasar los extremos de manera cruzada, forzamos que se apoyen entre sí consecutivamente.
     for (let i = 0; i < subdiv; i++) {
-        for (let j = 1; j <= subdiv; j++) {
+        for (let j = 0; j < subdiv; j++) {
             
-            // Definir esquinas de la celda matemática base en rango UV
-            let u0 = i / subdiv;
-            let u1 = (i + 1) / subdiv;
-            let v0 = (j - 1) / subdiv;
-            let v1 = j / subdiv;
+            // Tomamos los 4 puntos de la celda de la red estructural
+            let p00 = grid[i][j];
+            let p10 = grid[i+1][j];
+            let p01 = grid[i][j+1];
+            let p11 = grid[i+1][j+1];
 
-            // Recopilar vértices de soporte sobre la superficie paramétrica
-            let corners = [];
-            if (sides === 3) {
-                corners = [
-                    getSurfacePoint(surfaceType, u0, v0),
-                    getSurfacePoint(surfaceType, u1, v0),
-                    getSurfacePoint(surfaceType, (u0+u1)*0.5, v1)
-                ];
-            } else if (sides === 4) {
-                corners = [
-                    getSurfacePoint(surfaceType, u0, v0),
-                    getSurfacePoint(surfaceType, u1, v0),
-                    getSurfacePoint(surfaceType, u1, v1),
-                    getSurfacePoint(surfaceType, u0, v1)
-                ];
-            } else {
-                // Para 5, 6 y 8 lados, extrapolamos de forma circular sobre el parche UV
-                let centroU = (u0 + u1) * 0.5;
-                let centroV = (v0 + v1) * 0.5;
-                let radioU = (u1 - u0) * 0.5;
-                let radioV = (v1 - v0) * 0.5;
+            // Creamos un array de aristas candidatas según el patrón n-gonal seleccionado
+            let edges = [];
 
-                for (let n = 0; n < sides; n++) {
-                    let angle = (n / sides) * Math.PI * 2;
-                    let uN = centroU + radioU * Math.cos(angle);
-                    let vN = centroV + radioV * Math.sin(angle);
-                    corners.push(getSurfacePoint(surfaceType, uN, vN));
-                }
+            if (sides === 4 || sides === 5 || sides === 6 || sides === 8) {
+                // Estructura cuadrangular y superior: Barras principales en dirección U y V
+                edges.push({ v1: p00, v2: p10, next1: p01, next2: p11 });
+                edges.push({ v1: p00, v2: p01, next1: p10, next2: p11 });
+            } 
+            
+            if (sides === 3 || sides === 5 || sides === 6 || sides === 8) {
+                // Patrones triangulares o de alta densidad: agregamos las diagonales cruzadas
+                edges.push({ v1: p00, v2: p11, next1: p10, next2: p01 });
             }
 
-            // Centro de masa local de la celda
-            let centro = new THREE.Vector3();
-            corners.forEach(p => centro.add(p));
-            centro.divideScalar(corners.length);
+            // 3. Modificación Recíproca de Extremos (El truco del Doble Apoyo)
+            edges.forEach(edge => {
+                let dir = new THREE.Vector3().subVectors(edge.v2, edge.v1);
+                let longitudOriginal = dir.length();
+                dir.normalize();
 
-            // 2. Tectónica Recíproca: Crear los elementos entrelazados (Efecto Molino)
-            for (let k = 0; k < corners.length; k++) {
-                let pActual = corners[k];
-                let pSiguiente = corners[(k + 1) % corners.length];
+                // Vector ortogonal aproximado para generar el desfase de apoyo superior/inferior
+                let perpendicular = new THREE.Vector3().subVectors(edge.next1, edge.v1).cross(dir).normalize();
+                let vOffset = new THREE.Vector3().copy(perpendicular).multiplyScalar(offset * 0.8);
 
-                // Interpolación lineal del punto de apoyo según el offset paramétrico
-                let puntoApoyo = new THREE.Vector3().lerpVectors(pActual, pSiguiente, 0.5 + offset);
+                // El punto inicial se desliza hacia adelante y arriba; el final hacia atrás y abajo
+                let pInicio = new THREE.Vector3().copy(edge.v1).addScaledVector(dir, offset * longitudOriginal).add(vOffset);
+                let pFin = new THREE.Vector3().copy(edge.v2).addScaledVector(dir, -offset * longitudOriginal).add(vOffset);
+
+                // Agregar un extra a la longitud para que la viga vuele un poco y monte físicamente sobre la otra
+                let dirBarra = new THREE.Vector3().subVectors(pFin, pInicio);
+                let lenBarra = dirBarra.length();
+                dirBarra.normalize();
                 
-                // Vector que define el eje longitudinal de la viga estructural
-                let pInicio = pActual;
-                let pFin = new THREE.Vector3().lerpVectors(puntoApoyo, centro, 1.2);
-
-                let vigaLongitud = pInicio.distanceTo(pFin);
+                pInicio.addScaledVector(dirBarra, -grosor * 1.5);
+                pFin.addScaledVector(dirBarra, grosor * 1.5);
+                let finalLen = pInicio.distanceTo(pFin);
 
                 if (checkSolid.checked) {
-                    // Generación del componente sólido (Viga de sección rectangular cuadrangular)
-                    let geomViga = new THREE.BoxGeometry(grosor, grosor, vigaLongitud);
+                    // Render de los listones rectangulares mecánicos planos
+                    let geomViga = new THREE.BoxGeometry(grosor * 1.6, grosor, finalLen);
                     let meshViga = new THREE.Mesh(geomViga, solidMaterial);
 
-                    // Posicionar en el punto medio del vector
                     let puntoMedio = new THREE.Vector3().addVectors(pInicio, pFin).multiplyScalar(0.5);
                     meshViga.position.copy(puntoMedio);
-
-                    // Orientar la matriz tridimensional del objeto hacia el nodo destino
                     meshViga.lookAt(pFin);
+
                     structureGroup.add(meshViga);
                 } else {
-                    // Representación alámbrica pura (Look holograma de vectores)
                     let geomLinea = new THREE.BufferGeometry().setFromPoints([pInicio, pFin]);
                     let linea = new THREE.Line(geomLinea, wireMaterial);
                     structureGroup.add(linea);
                 }
-            }
+            });
         }
     }
 }
 
-// --- EVENT LISTENERS (INTERACTIVIDAD) ---
+// --- EVENT LISTENERS ---
 [selectSurface, selectPattern, checkSolid].forEach(elem => {
     elem.addEventListener('change', generateReciprocalStructure);
 });
@@ -211,17 +195,13 @@ window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// --- LOOP DE ANIMACIÓN ---
+// --- BUCLE DE ANIMACIÓN ---
 function animate() {
     requestAnimationFrame(animate);
-    
-    // Rotación de órbita pasiva muy leve
-    structureGroup.rotation.y += 0.0015;
-
+    structureGroup.rotation.y += 0.001; // Rotación pasiva de exhibición
     controls.update();
     renderer.render(scene, camera);
 }
 
-// Inicialización automática
 generateReciprocalStructure();
 animate();
