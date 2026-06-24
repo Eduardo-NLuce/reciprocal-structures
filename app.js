@@ -96,7 +96,6 @@ function generateReciprocalStructure() {
     const grosor = parseFloat(sliderGrosor.value);
     const subdiv = parseInt(sliderSubdiv.value);
 
-    // Actualizar labels numéricos en el HUD
     document.getElementById('val-offset').innerText = offset.toFixed(2);
     document.getElementById('val-voladizo').innerText = voladizoFactor.toFixed(1);
     document.getElementById('val-grosor').innerText = grosor.toFixed(2);
@@ -110,6 +109,7 @@ function generateReciprocalStructure() {
     });
     const wireMaterial = new THREE.LineBasicMaterial({ color: 0x00f3ff });
 
+    // 1. Matriz de puntos base sobre la superficie
     let grid = [];
     for (let i = 0; i <= subdiv; i++) {
         grid[i] = [];
@@ -118,6 +118,7 @@ function generateReciprocalStructure() {
         }
     }
 
+    // 2. Procesamiento topológico de aristas según el N-Gon elegido
     for (let i = 0; i < subdiv; i++) {
         for (let j = 0; j < subdiv; j++) {
             
@@ -128,18 +129,42 @@ function generateReciprocalStructure() {
 
             let edges = [];
 
-            if (sides === 4 || sides === 5 || sides === 6 || sides === 8) {
+            // PATRÓN TRIANGULAR: Requiere el marco perimetral + ambas diagonales para cerrar los polígonos
+            if (sides === 3) {
                 edges.push({ v1: p00, v2: p10, next1: p01, next2: p11 });
                 edges.push({ v1: p00, v2: p01, next1: p10, next2: p11 });
-            } 
-            
-            if (sides === 3 || sides === 5 || sides === 6 || sides === 8) {
                 edges.push({ v1: p00, v2: p11, next1: p10, next2: p01 });
+                edges.push({ v1: p10, v2: p01, next1: p00, next2: p11 });
+            }
+            
+            // PATRÓN CUADRADO O PENTAGONAL BASE
+            if (sides === 4 || sides === 5) {
+                edges.push({ v1: p00, v2: p10, next1: p01, next2: p11 });
+                edges.push({ v1: p00, v2: p01, next1: p10, next2: p11 });
             }
 
+            // PATRÓN HEXAGONAL / OCTAGONAL PARAMÉTRICO (Subdivisión radial interna por celda)
+            if (sides === 6 || sides === 8) {
+                // Calculamos un centro geométrico en la celda para tejer los polígonos radiales
+                let centroCelda = new THREE.Vector3().addVectors(p00, p11).multiplyScalar(0.5);
+                let listaPuntos = [p00, p10, p11, p01];
+                
+                for(let j=0; j<4; j++) {
+                    let pA = listaPuntos[j];
+                    let pB = listaPuntos[(j+1)%4];
+                    // Genera radios hacia el centro simulando las subdivisiones del polígono complejo
+                    edges.push({ v1: pA, v2: centroCelda, next1: pB, next2: p00 });
+                    if(sides === 8) {
+                        edges.push({ v1: pA, v2: pB, next1: centroCelda, next2: p11 });
+                    }
+                }
+            }
+
+            // 3. Renderizado físico y cálculo del desfase recíproco
             edges.forEach(edge => {
                 let dir = new THREE.Vector3().subVectors(edge.v2, edge.v1);
                 let longitudOriginal = dir.length();
+                if(longitudOriginal < 0.01) return;
                 dir.normalize();
 
                 let perpendicular = new THREE.Vector3().subVectors(edge.next1, edge.v1).cross(dir).normalize();
@@ -151,7 +176,6 @@ function generateReciprocalStructure() {
                 let dirBarra = new THREE.Vector3().subVectors(pFin, pInicio);
                 dirBarra.normalize();
                 
-                // Aplicamos el factor dinámico del slider para el voladizo extra en los extremos
                 let extension = grosor * voladizoFactor;
                 pInicio.addScaledVector(dirBarra, -extension);
                 pFin.addScaledVector(dirBarra, extension);
