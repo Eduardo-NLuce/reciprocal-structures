@@ -229,7 +229,21 @@ window.addEventListener('resize', () => {
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
+// --- LOGIC TO MINIMIZE / MAXIMIZE THE HUD ---
+const hudContainer = document.getElementById('hud-container');
+const btnToggleHud = document.getElementById('btn-toggle-hud');
+let isHudMinimized = false;
 
+btnToggleHud.addEventListener('click', () => {
+    isHudMinimized = !isHudMinimized;
+    hudContainer.classList.toggle('minimized');
+    
+    if (isHudMinimized) {
+        btnToggleHud.innerText = "[+ CONTROL_SYS]";
+    } else {
+        btnToggleHud.innerText = "_ MINIMIZE";
+    }
+});
 // --- BUCLE DE ANIMACIÓN ---
 function animate() {
     requestAnimationFrame(animate);
