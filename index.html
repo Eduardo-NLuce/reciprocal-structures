@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RECIPROCAL_LAB // Structural Generator</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Dependencias de Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
@@ -12,7 +13,9 @@
 
     <div id="canvas-container"></div>
 
-<div id="hud-container">
+    <!-- HUD Principal -->
+    <div id="hud-container">
+        <!-- Botón de Toggle -->
         <button id="btn-toggle-hud" class="hud-toggle-btn">_ MINIMIZE</button>
 
         <div id="hud-content">
@@ -30,7 +33,7 @@
                     <option value="hypar" selected>HYPERBOLIC PARABOLOID</option>
                     <option value="catenoid">CATENOID</option>
                     <option value="sphere">SEMI-SPHERE</option>
-                    <option value="ellipsoid">SEMI-ELLIPSOIDE</option>
+                    <option value="ellipsoid">SEMI-ELLIPSOID</option>
                 </select>
             </div>
 
@@ -48,7 +51,7 @@
             <hr class="hud-divider">
 
             <div class="control-group">
-                <label class="hud-label">RECIPROCAL OFFSET / ENGAGEMENT (<span id="val-offset">0.00</span>)</label>
+                <label class="hud-label">RECIPROCAL OFFSET (<span id="val-offset">0.00</span>)</label>
                 <input type="range" id="slider-offset" min="0.0" max="0.6" step="0.02" value="0.0">
             </div>
 
