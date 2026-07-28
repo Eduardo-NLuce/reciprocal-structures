@@ -26,7 +26,7 @@ scene.add(light2);
 const ambientLight = new THREE.AmbientLight(0x0b0f19, 1.8);
 scene.add(ambientLight);
 
-// Referencias del DOM
+// DOM Elements
 const selectSurface = document.getElementById('select-surface');
 const selectPattern = document.getElementById('select-pattern');
 const sliderOffset = document.getElementById('slider-offset');
@@ -35,6 +35,8 @@ const sliderGrosor = document.getElementById('slider-grosor');
 const sliderSubdiv = document.getElementById('slider-subdiv');
 const checkSolid = document.getElementById('check-viga-solida');
 const btnRotation = document.getElementById('btn-rotation');
+
+// DOM Elements para minimizar
 const btnToggleHud = document.getElementById('btn-toggle-hud');
 const hudContainer = document.getElementById('hud-container');
 
@@ -96,7 +98,6 @@ function generateReciprocalStructure() {
     const grosor = parseFloat(sliderGrosor.value);
     const subdiv = parseInt(sliderSubdiv.value);
 
-    // Actualizar etiquetas numéricas
     document.getElementById('val-offset').innerText = offset.toFixed(2);
     document.getElementById('val-voladizo').innerText = voladizoFactor.toFixed(1);
     document.getElementById('val-grosor').innerText = grosor.toFixed(2);
@@ -202,11 +203,14 @@ btnRotation.addEventListener('click', () => {
     btnRotation.style.color = isRotating ? "#ff5500" : "#00f3ff";
 });
 
-// Listener de Minimizar
+// Listener directo para minimizar / maximizar el panel
 btnToggleHud.addEventListener('click', () => {
     hudContainer.classList.toggle('minimized');
-    const isMin = hudContainer.classList.contains('minimized');
-    btnToggleHud.innerText = isMin ? "[+ CONTROL_SYS]" : "_ MINIMIZE";
+    if (hudContainer.classList.contains('minimized')) {
+        btnToggleHud.innerText = "[+ CONTROL_SYS]";
+    } else {
+        btnToggleHud.innerText = "_ MINIMIZE";
+    }
 });
 
 window.addEventListener('resize', () => {
