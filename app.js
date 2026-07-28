@@ -13,9 +13,8 @@ container.appendChild(renderer.domElement);
 
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
-controls.dampingFactor = 0.05;
 
-// Luces para enfatizar el volumen de los listones
+// Iluminación
 const light1 = new THREE.DirectionalLight(0xff5500, 1.3);
 light1.position.set(5, 12, 6);
 scene.add(light1);
@@ -27,22 +26,23 @@ scene.add(light2);
 const ambientLight = new THREE.AmbientLight(0x0b0f19, 1.8);
 scene.add(ambientLight);
 
-// UI Elements
+// Referencias del DOM
 const selectSurface = document.getElementById('select-surface');
 const selectPattern = document.getElementById('select-pattern');
 const sliderOffset = document.getElementById('slider-offset');
-const sliderVoladizo = document.getElementById('slider-voladizo'); // Corregido vinculación
+const sliderVoladizo = document.getElementById('slider-voladizo');
 const sliderGrosor = document.getElementById('slider-grosor');
 const sliderSubdiv = document.getElementById('slider-subdiv');
 const checkSolid = document.getElementById('check-viga-solida');
-const btnRotation = document.getElementById('btn-rotation'); // Corregido vinculación
+const btnRotation = document.getElementById('btn-rotation');
+const btnToggleHud = document.getElementById('btn-toggle-hud');
+const hudContainer = document.getElementById('hud-container');
 
-// Variables de estado de animación
 let structureGroup = new THREE.Group();
 scene.add(structureGroup);
 let isRotating = true;
 
-// --- ECUACIONES DE SUPERFICIES PARAMÉTRICAS ---
+// --- MATEMÁTICAS PARAMÉTRICAS ---
 function getSurfacePoint(type, u, v) {
     let x = 0, y = 0, z = 0;
     let uu = u * Math.PI * 2; 
@@ -83,7 +83,7 @@ function getSurfacePoint(type, u, v) {
     return new THREE.Vector3(x, y, z);
 }
 
-// --- GENERADOR DE ESTRUCTURA RECÍPROCA INTER-CONECTADA ---
+// --- GENERADOR ESTRUCTURAL ---
 function generateReciprocalStructure() {
     while(structureGroup.children.length > 0) {
         structureGroup.remove(structureGroup.children[0]);
@@ -96,6 +96,7 @@ function generateReciprocalStructure() {
     const grosor = parseFloat(sliderGrosor.value);
     const subdiv = parseInt(sliderSubdiv.value);
 
+    // Actualizar etiquetas numéricas
     document.getElementById('val-offset').innerText = offset.toFixed(2);
     document.getElementById('val-voladizo').innerText = voladizoFactor.toFixed(1);
     document.getElementById('val-grosor').innerText = grosor.toFixed(2);
@@ -109,7 +110,6 @@ function generateReciprocalStructure() {
     });
     const wireMaterial = new THREE.LineBasicMaterial({ color: 0x00f3ff });
 
-    // 1. Matriz de puntos base sobre la superficie
     let grid = [];
     for (let i = 0; i <= subdiv; i++) {
         grid[i] = [];
@@ -118,10 +118,8 @@ function generateReciprocalStructure() {
         }
     }
 
-    // 2. Procesamiento topológico de aristas según el N-Gon elegido
     for (let i = 0; i < subdiv; i++) {
         for (let j = 0; j < subdiv; j++) {
-            
             let p00 = grid[i][j];
             let p10 = grid[i+1][j];
             let p01 = grid[i][j+1];
@@ -129,51 +127,39 @@ function generateReciprocalStructure() {
 
             let edges = [];
 
-            // PATRÓN TRIANGULAR: Requiere el marco perimetral + ambas diagonales para cerrar los polígonos
             if (sides === 3) {
                 edges.push({ v1: p00, v2: p10, next1: p01, next2: p11 });
                 edges.push({ v1: p00, v2: p01, next1: p10, next2: p11 });
                 edges.push({ v1: p00, v2: p11, next1: p10, next2: p01 });
                 edges.push({ v1: p10, v2: p01, next1: p00, next2: p11 });
-            }
-            
-            // PATRÓN CUADRADO O PENTAGONAL BASE
-            if (sides === 4 || sides === 5) {
+            } else if (sides === 4 || sides === 5) {
                 edges.push({ v1: p00, v2: p10, next1: p01, next2: p11 });
                 edges.push({ v1: p00, v2: p01, next1: p10, next2: p11 });
-            }
-
-            // PATRÓN HEXAGONAL / OCTAGONAL PARAMÉTRICO (Subdivisión radial interna por celda)
-            if (sides === 6 || sides === 8) {
-                // Calculamos un centro geométrico en la celda para tejer los polígonos radiales
+            } else if (sides === 6 || sides === 8) {
                 let centroCelda = new THREE.Vector3().addVectors(p00, p11).multiplyScalar(0.5);
-                let listaPuntos = [p00, p10, p11, p01];
-                
-                for(let j=0; j<4; j++) {
-                    let pA = listaPuntos[j];
-                    let pB = listaPuntos[(j+1)%4];
-                    // Genera radios hacia el centro simulando las subdivisiones del polígono complejo
-                    edges.push({ v1: pA, v2: centroCelda, next1: pB, next2: p00 });
-                    if(sides === 8) {
-                        edges.push({ v1: pA, v2: pB, next1: centroCelda, next2: p11 });
-                    }
+                let pts = [p00, p10, p11, p01];
+                for(let k = 0; k < 4; k++) {
+                    edges.push({ v1: pts[k], v2: centroCelda, next1: pts[(k+1)%4], next2: p00 });
                 }
             }
 
-            // 3. Renderizado físico y cálculo del desfase recíproco
             edges.forEach(edge => {
                 let dir = new THREE.Vector3().subVectors(edge.v2, edge.v1);
-                let longitudOriginal = dir.length();
-                if(longitudOriginal < 0.01) return;
+                let len = dir.length();
+                if(len < 0.001) return;
                 dir.normalize();
 
                 let perpendicular = new THREE.Vector3().subVectors(edge.next1, edge.v1).cross(dir).normalize();
-                let vOffset = new THREE.Vector3().copy(perpendicular).multiplyScalar(offset * 0.8);
+                if(!isFinite(perpendicular.x)) perpendicular.set(0, 1, 0);
 
-                let pInicio = new THREE.Vector3().copy(edge.v1).addScaledVector(dir, offset * longitudOriginal).add(vOffset);
-                let pFin = new THREE.Vector3().copy(edge.v2).addScaledVector(dir, -offset * longitudOriginal).add(vOffset);
+                let vOffset = perpendicular.clone().multiplyScalar(offset * 0.8);
+
+                let pInicio = edge.v1.clone().addScaledVector(dir, offset * len).add(vOffset);
+                let pFin = edge.v2.clone().addScaledVector(dir, -offset * len).add(vOffset);
 
                 let dirBarra = new THREE.Vector3().subVectors(pFin, pInicio);
+                let bLen = dirBarra.length();
+                if(bLen < 0.001) return;
                 dirBarra.normalize();
                 
                 let extension = grosor * voladizoFactor;
@@ -200,28 +186,27 @@ function generateReciprocalStructure() {
     }
 }
 
-// --- EVENT LISTENERS ---
+// --- LISTENERS ---
 [selectSurface, selectPattern, checkSolid].forEach(elem => {
     elem.addEventListener('change', generateReciprocalStructure);
 });
 
-// Incluido explícitamente sliderVoladizo en la matriz de escucha de cambios
 [sliderOffset, sliderVoladizo, sliderGrosor, sliderSubdiv].forEach(slider => {
     slider.addEventListener('input', generateReciprocalStructure);
 });
 
-// --- LOGIC FOR PASSIVE ROTATION BUTTON ---
 btnRotation.addEventListener('click', () => {
     isRotating = !isRotating;
-    if (isRotating) {
-        btnRotation.innerText = "PAUSE ROTATION";
-        btnRotation.style.borderColor = "#ff5500";
-        btnRotation.style.color = "#ff5500";
-    } else {
-        btnRotation.innerText = "RESUME ROTATION";
-        btnRotation.style.borderColor = "#00f3ff";
-        btnRotation.style.color = "#00f3ff";
-    }
+    btnRotation.innerText = isRotating ? "PAUSE ROTATION" : "RESUME ROTATION";
+    btnRotation.style.borderColor = isRotating ? "#ff5500" : "#00f3ff";
+    btnRotation.style.color = isRotating ? "#ff5500" : "#00f3ff";
+});
+
+// Listener de Minimizar
+btnToggleHud.addEventListener('click', () => {
+    hudContainer.classList.toggle('minimized');
+    const isMin = hudContainer.classList.contains('minimized');
+    btnToggleHud.innerText = isMin ? "[+ CONTROL_SYS]" : "_ MINIMIZE";
 });
 
 window.addEventListener('resize', () => {
@@ -229,33 +214,15 @@ window.addEventListener('resize', () => {
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
-// --- LOGIC TO MINIMIZE / MAXIMIZE THE HUD ---
-const hudContainer = document.getElementById('hud-container');
-const btnToggleHud = document.getElementById('btn-toggle-hud');
-let isHudMinimized = false;
 
-btnToggleHud.addEventListener('click', () => {
-    isHudMinimized = !isHudMinimized;
-    hudContainer.classList.toggle('minimized');
-    
-    if (isHudMinimized) {
-        btnToggleHud.innerText = "[+ CONTROL_SYS]";
-    } else {
-        btnToggleHud.innerText = "_ MINIMIZE";
-    }
-});
-// --- BUCLE DE ANIMACIÓN ---
+// --- ANIMACIÓN ---
 function animate() {
     requestAnimationFrame(animate);
-    
-    // Solo aplica rotación automática si la bandera isRotating es verdadera
-    if (isRotating) {
-        structureGroup.rotation.y += 0.001;
-    }
-
+    if (isRotating) structureGroup.rotation.y += 0.001;
     controls.update();
     renderer.render(scene, camera);
 }
 
+// Iniciar
 generateReciprocalStructure();
 animate();
