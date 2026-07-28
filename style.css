@@ -23,10 +23,34 @@ body, html {
     z-index: 1;
 }
 
+/* Botón Flotante Fijo */
+.hud-toggle-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 100; /* Siempre por encima de todo */
+    background: rgba(10, 6, 4, 0.95);
+    border: 1px solid var(--neon-cyan);
+    color: var(--neon-cyan);
+    font-family: inherit;
+    font-size: 0.72rem;
+    font-weight: bold;
+    padding: 8px 14px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    box-shadow: 0 0 10px var(--glow-orange);
+    transition: all 0.2s ease;
+}
+
+.hud-toggle-btn:hover {
+    background: var(--neon-cyan);
+    color: #050201;
+}
+
 /* Panel Principal */
 #hud-container {
-    position: absolute;
-    top: 20px;
+    position: fixed;
+    top: 60px; /* Queda justo debajo del botón */
     left: 20px;
     z-index: 10;
     width: 310px;
@@ -36,53 +60,12 @@ body, html {
     padding: 20px;
     backdrop-filter: blur(6px);
     border-radius: 3px;
-    transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* Clase de Minimizado */
+/* Estado Minimizado */
 #hud-container.minimized {
-    transform: translateX(-350px);
-}
-
-#hud-content {
-    transition: opacity 0.2s ease;
-}
-
-#hud-container.minimized #hud-content {
-    opacity: 0;
-    pointer-events: none;
-}
-
-/* Botón de Colapso */
-.hud-toggle-btn {
-    position: absolute;
-    top: 0;
-    right: -125px;
-    background: rgba(10, 6, 4, 0.95);
-    border: 1px solid var(--neon-orange);
-    color: var(--neon-cyan);
-    font-family: inherit;
-    font-size: 0.72rem;
-    padding: 8px 12px;
-    cursor: pointer;
-    letter-spacing: 1px;
-    box-shadow: 0 0 10px var(--glow-orange);
-    transition: all 0.2s ease;
-}
-
-#hud-container:not(.minimized) .hud-toggle-btn {
-    position: relative;
-    right: 0;
-    float: right;
-    margin-bottom: 12px;
-    background: transparent;
-    border-color: var(--neon-cyan);
-    box-shadow: none;
-}
-
-.hud-toggle-btn:hover {
-    background: var(--neon-cyan);
-    color: #050201;
+    transform: translateX(-360px); /* Oculta completamente el panel */
 }
 
 /* Estilos de Controles */
