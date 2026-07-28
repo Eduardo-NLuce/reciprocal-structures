@@ -98,3 +98,59 @@ input[type="range"]::-webkit-slider-thumb {
     cursor: pointer;
     box-shadow: 0 0 5px var(--neon-cyan);
 }
+/* Modificación al contenedor existente para soportar la animación */
+#hud-container {
+    transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.3s ease;
+}
+
+/* El estado minimizado: desplaza el panel a la izquierda y lo vuelve una pestaña angosta */
+#hud-container.minimized {
+    transform: translateX(-310px); /* Se mueve casi por completo a la izquierda */
+    background: rgba(10, 6, 4, 0.95);
+}
+
+/* Esconde el contenido de los sliders para evitar clicks fantasma al colapsar */
+#hud-container.minimized #hud-content {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+#hud-content {
+    opacity: 1;
+    transition: opacity 0.3s ease 0.1s;
+}
+
+/* Estilo futurista para el botón de minimizar/maximizar */
+.hud-toggle-btn {
+    position: absolute;
+    right: -100px; /* Se proyecta fuera del panel cuando está minimizado */
+    top: 0;
+    background: rgba(10, 6, 4, 0.9);
+    border: 1px solid var(--neon-orange);
+    color: var(--neon-cyan);
+    font-family: inherit;
+    font-size: 0.7rem;
+    padding: 6px 12px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    box-shadow: 0 0 10px var(--glow-orange);
+    transition: all 0.2s ease;
+}
+
+/* Ajuste del botón cuando el panel está abierto */
+#hud-container:not(.minimized) .hud-toggle-btn {
+    position: relative;
+    right: 0;
+    float: right;
+    margin-bottom: 10px;
+    background: transparent;
+    border: 1px solid var(--neon-cyan);
+    box-shadow: none;
+}
+
+.hud-toggle-btn:hover {
+    background: var(--neon-cyan);
+    color: #050201;
+    box-shadow: 0 0 8px var(--neon-cyan);
+}
